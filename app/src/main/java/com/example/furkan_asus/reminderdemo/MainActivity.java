@@ -4,7 +4,11 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Menu;
@@ -20,10 +24,11 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
 
-    private ListView mListView;
     private TextView mEditText;
     private List<Reminder> mReminders;
-    private ArrayAdapter mAdapter;
+    private ReminderAdapter mAdapter;
+    private RecyclerView mRecyclerView;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,13 +37,13 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mListView = findViewById(R.id.listView);
         mEditText = findViewById(R.id.editText);
         mReminders = new ArrayList<>();
-        mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mReminders);
-        mListView.setAdapter(mAdapter);
+        mRecyclerView = findViewById(R.id.recyclerView);
+        mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
 
-       FloatingActionButton fab = findViewById(R.id.fab);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -56,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
 
                     //Initialize the EditText for the next item
                     mEditText.setText("");
-                } else{
+                } else {
                     //Show a message to the user if the textfield is empty
                     Snackbar.make(view, "Please enter some text in the textfield",
                             Snackbar.LENGTH_LONG).setAction("Action", null).show();
@@ -64,14 +69,40 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                mReminders.remove(position);
-                mAdapter.notifyDataSetChanged();
-                return true;
-            }
-        });
+//        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//            @Override
+//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//                mReminders.remove(position);
+//                mAdapter.notifyDataSetChanged();
+//                return true;
+//            }
+//        });
+
+
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
+                new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+                    @Override
+                    public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder
+                            target) {
+                        return false;
+                    }
+
+
+                    //Called when a user swipes left or right on a ViewHolder
+                    @Override
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                        //Get the index corresponding to the selected position
+
+                        int position = (viewHolder.getAdapterPosition());
+                        mReminders.remove(position);
+                        mAdapter.notifyItemRemoved(position);
+                    }
+                };
+
+
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(mRecyclerView);
 
         updateUI();
 
@@ -79,8 +110,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (mAdapter == null) {
-            mAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, mReminders);
-            mListView.setAdapter(mAdapter);
+            mAdapter = new ReminderAdapter(mReminders);
+            mRecyclerView.setAdapter(mAdapter);
         } else {
             mAdapter.notifyDataSetChanged();
         }
