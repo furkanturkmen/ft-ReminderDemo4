@@ -1,11 +1,11 @@
 package com.example.furkan_asus.reminderdemo;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -13,22 +13,26 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
 
+public class MainActivity extends AppCompatActivity implements ReminderAdapter.ReminderClickListener{
 
     private TextView mEditText;
     private List<Reminder> mReminders;
     private ReminderAdapter mAdapter;
     private RecyclerView mRecyclerView;
 
+
+    //Constants used when calling the update activity
+
+    public static final String EXTRA_REMINDER = "Reminder";
+    public static final int REQUESTCODE = 1234;
+    private int mModifyPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,16 +73,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        mListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//            @Override
-//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//                mReminders.remove(position);
-//                mAdapter.notifyDataSetChanged();
-//                return true;
-//            }
-//        });
-
-
         ItemTouchHelper.SimpleCallback simpleItemTouchCallback =
                 new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
 
@@ -110,12 +104,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateUI() {
         if (mAdapter == null) {
-            mAdapter = new ReminderAdapter(mReminders);
+            mAdapter = new ReminderAdapter(mReminders, this);
             mRecyclerView.setAdapter(mAdapter);
         } else {
             mAdapter.notifyDataSetChanged();
         }
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -138,4 +133,37 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+
+    @Override
+    public void reminderOnClick(int i) {
+        Intent intent = new Intent(MainActivity.this, UpdateActivity.class);
+        mModifyPosition = i;
+        intent.putExtra(EXTRA_REMINDER, mReminders.get(i));
+        startActivityForResult(intent, REQUESTCODE);
+    }
+    @Override
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+
+        if (requestCode == REQUESTCODE) {
+
+            if (resultCode == RESULT_OK) {
+
+                Reminder updatedReminder = data.getParcelableExtra(MainActivity.EXTRA_REMINDER);
+
+                // New timestamp: timestamp of update
+
+                mReminders.set(mModifyPosition, updatedReminder);
+
+                updateUI();
+
+            }
+
+        }
+
+    }
+
+
 }
