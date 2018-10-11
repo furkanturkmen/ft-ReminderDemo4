@@ -1,4 +1,4 @@
-package com.example.furkan_asus.reminderdemo;
+package com.example.furkan_asus.reminderdemo.adapters;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -7,6 +7,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.example.furkan_asus.reminderdemo.models.Reminder;
 
 import java.util.List;
 
@@ -57,11 +59,19 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.ViewHo
 
         Reminder reminder = mReminders.get(position);
 
-        holder.textView.setText(reminder.getmReminderText());
+        holder.textView.setText(reminder.getReminderText());
     }
 
     @Override
     public int getItemCount() {
         return mReminders.size();
+    }
+
+    public void swapList (List<Reminder> newList) {
+        mReminders = newList;
+        if (newList != null) {
+            // Force the RecyclerView to refresh
+            this.notifyDataSetChanged();
+        }
     }
 }

@@ -1,6 +1,7 @@
-package com.example.furkan_asus.reminderdemo;
+package com.example.furkan_asus.reminderdemo.activities;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,18 +15,23 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.example.furkan_asus.reminderdemo.R;
+import com.example.furkan_asus.reminderdemo.models.Reminder;
+import com.example.furkan_asus.reminderdemo.adapters.ReminderAdapter;
+import com.example.furkan_asus.reminderdemo.utils.AppDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends AppCompatActivity implements ReminderAdapter.ReminderClickListener{
+public class MainActivity extends AppCompatActivity implements ReminderAdapter.ReminderClickListener {
 
     private TextView mEditText;
     private List<Reminder> mReminders;
     private ReminderAdapter mAdapter;
     private RecyclerView mRecyclerView;
+    static AppDatabase db;
 
 
     //Constants used when calling the update activity
@@ -33,6 +39,10 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
     public static final String EXTRA_REMINDER = "Reminder";
     public static final int REQUESTCODE = 1234;
     private int mModifyPosition;
+    public final static int TASK_GET_ALL_REMINDERS = 0;
+    public final static int TASK_DELETE_REMINDER = 1;
+    public final static int TASK_UPDATE_REMINDER = 2;
+    public final static int TASK_INSERT_REMINDER = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +55,10 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
         mReminders = new ArrayList<>();
         mRecyclerView = findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+        db = AppDatabase.getInstance(this);
+
+        new ReminderAsyncTask(TASK_GET_ALL_REMINDERS).execute();
+
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -59,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
                 if (!(TextUtils.isEmpty(text))) {
                     //Add the text to the list (datamodel)
                     mReminders.add(newReminder);
+                    new ReminderAsyncTask(TASK_INSERT_REMINDER).execute(newReminder);
+
 
                     //Tell the adapter that the data set has been modified: the screen will be refreshed.
                     mAdapter.notifyDataSetChanged();
@@ -89,8 +105,8 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
                         //Get the index corresponding to the selected position
 
                         int position = (viewHolder.getAdapterPosition());
+                        new ReminderAsyncTask(TASK_DELETE_REMINDER).execute(mReminders.get(position));
                         mReminders.remove(position);
-                        mAdapter.notifyItemRemoved(position);
                     }
                 };
 
@@ -107,10 +123,17 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
             mAdapter = new ReminderAdapter(mReminders, this);
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            mAdapter.notifyDataSetChanged();
+            mAdapter.swapList(mReminders);
         }
     }
 
+    public void onReminderDbUpdated(List list) {
+
+        mReminders = list;
+
+        updateUI();
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -154,10 +177,7 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
                 Reminder updatedReminder = data.getParcelableExtra(MainActivity.EXTRA_REMINDER);
 
                 // New timestamp: timestamp of update
-
-                mReminders.set(mModifyPosition, updatedReminder);
-
-                updateUI();
+                new ReminderAsyncTask(TASK_UPDATE_REMINDER).execute(updatedReminder);
 
             }
 
@@ -165,5 +185,62 @@ public class MainActivity extends AppCompatActivity implements ReminderAdapter.R
 
     }
 
+    public class ReminderAsyncTask extends AsyncTask<Reminder, Void, List> {
+
+
+        private int taskCode;
+
+
+        public ReminderAsyncTask(int taskCode) {
+
+            this.taskCode = taskCode;
+
+        }
+
+
+        @Override
+
+        protected List doInBackground(Reminder... reminders) {
+
+            switch (taskCode) {
+
+                case TASK_DELETE_REMINDER:
+
+                    db.reminderDao().deleteReminders(reminders[0]);
+
+                    break;
+
+                case TASK_UPDATE_REMINDER:
+
+                    db.reminderDao().updateReminders(reminders[0]);
+
+                    break;
+
+                case TASK_INSERT_REMINDER:
+
+                    db.reminderDao().insertReminders(reminders[0]);
+
+                    break;
+
+            }
+
+
+            //To return a new list with the updated data, we get all the data from the database again.
+
+            return db.reminderDao().getAllReminders();
+
+        }
+
+
+        @Override
+
+        protected void onPostExecute(List list) {
+
+            super.onPostExecute(list);
+
+            onReminderDbUpdated(list);
+
+        }
+    }
 
 }
