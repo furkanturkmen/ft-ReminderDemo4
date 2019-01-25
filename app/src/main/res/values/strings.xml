@@ -5,4 +5,6 @@
     <string name="title_activity_update">UpdateActivity</string>
     <string name="edit_reminder">Edit reminder</string>
     <string name="name_reminder">Name</string>
+    <string name="quote_of_the_day">Quote of the day:</string>
+    <string name="loading_quote">Loading quote...</string>
 </resources>

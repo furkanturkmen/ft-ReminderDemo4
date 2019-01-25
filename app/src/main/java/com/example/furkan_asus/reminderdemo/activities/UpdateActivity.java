@@ -12,11 +12,14 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.example.furkan_asus.reminderdemo.R;
-import com.example.furkan_asus.reminderdemo.models.Reminder;
+import com.example.furkan_asus.reminderdemo.models.Grade;
+import com.example.furkan_asus.reminderdemo.activities.MainActivity;
 
 public class UpdateActivity extends AppCompatActivity {
 
-    private EditText mReminderView;
+    private EditText mGradeViewName;
+    private EditText mGradeViewScore;
+    private EditText mGradeViewDate;
 
 
 
@@ -24,50 +27,45 @@ public class UpdateActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
         //Init local variables
-
-        mReminderView = findViewById(R.id.textUpdate);
+        mGradeViewName  = findViewById(R.id.textUpdate);
+        mGradeViewScore = findViewById(R.id.textUpdateScore);
+        mGradeViewDate  = findViewById(R.id.textUpdateDate);
 
 
         //Obtain the parameters provided by MainActivity
+        final Grade gradeUpdate = getIntent().getParcelableExtra(MainActivity.EXTRA_GRADE);
+        mGradeViewName.setText(gradeUpdate.getGradeText());
+        mGradeViewScore.setText(gradeUpdate.getGradeScore());
+        mGradeViewDate.setText(gradeUpdate.getGradeDate());
 
-        final Reminder reminderUpdate = getIntent().getParcelableExtra(MainActivity.EXTRA_REMINDER);
-
-        mReminderView.setText(reminderUpdate.getReminderText());
 
 
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab =  findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = mReminderView.getText().toString();
+                String name = mGradeViewName.getText().toString();
+                String score = mGradeViewScore.getText().toString();
+                String date = mGradeViewDate.getText().toString();
 
 
-                //(reminderUpdate.setReminderText(updatedReminderText)));
-
-                if (!TextUtils.isEmpty(text)) {
-
-                    reminderUpdate.setReminderText(text);
-
+                //(gradeUpdate.setGradeText(updatedGradeText)));
+                if (!TextUtils.isEmpty(name)) {
+                    gradeUpdate.setGradeText(name);
+                    gradeUpdate.setGradeScore(score);
+                    gradeUpdate.setGradeDate(date);
                     //Prepare the return parameter and return
-
                     Intent resultIntent = new Intent();
-
-                    resultIntent.putExtra(MainActivity.EXTRA_REMINDER, reminderUpdate);
-
+                    resultIntent.putExtra(MainActivity.EXTRA_GRADE, gradeUpdate);
                     setResult(Activity.RESULT_OK, resultIntent);
-
                     finish();
-
                 } else {
-
                     Snackbar.make(view, "Enter some data", Snackbar.LENGTH_LONG);
-
                 }
             }
         });

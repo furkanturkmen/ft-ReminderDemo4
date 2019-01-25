@@ -6,22 +6,22 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 import android.arch.persistence.room.Update;
 
-import com.example.furkan_asus.reminderdemo.models.Reminder;
+import com.example.furkan_asus.reminderdemo.models.Grade;
 
 import java.util.List;
 
 @Dao
-public interface ReminderDao {
+public interface GradeDao {
 
-    @Query("SELECT * FROM reminder")
-    public List<Reminder> getAllReminders();
+    @Query("SELECT * FROM grade")
+    public List<Grade> getAllGrades();
 
     @Insert
-    public void insertReminders(Reminder reminders);
+    public void insertGrades(Grade grades);
 
     @Delete
-    public void deleteReminders(Reminder reminders);
+    public void deleteGrades(Grade grades);
 
     @Update
-    public void updateReminders(Reminder reminders);
+    public void updateGrades(Grade grades);
 }
